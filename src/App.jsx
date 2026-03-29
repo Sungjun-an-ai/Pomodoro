@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import TimerCanvas from './components/TimerCanvas'
 import ControlPanel from './components/ControlPanel'
 
@@ -43,12 +43,97 @@ export default function App() {
   const [noiseSource, setNoiseSource] = useState(NOISE_OPTIONS[0].value)
   const [noiseVolume, setNoiseVolume] = useState(50)
 
+  // ── Timer Logic State ──
+  const [secondsLeft, setSecondsLeft] = useState(minutes * 60)
+  const [isRunning, setIsRunning] = useState(false)
+  const [totalSeconds, setTotalSeconds] = useState(minutes * 60)
+
+  // ── Audio Ref ──
+  const audioRef = useRef(null)
+
+  // ── Timer Countdown ──
+  useEffect(() => {
+    if (!isRunning) return
+    if (secondsLeft <= 0) {
+      setIsRunning(false)
+      return
+    }
+    const id = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isRunning, secondsLeft])
+
+  // ── Sync secondsLeft/totalSeconds when minutes changes (only when not running) ──
+  useEffect(() => {
+    if (!isRunning) {
+      setSecondsLeft(minutes * 60)
+      setTotalSeconds(minutes * 60)
+    }
+  }, [minutes, isRunning])
+
+  // ── White Noise Audio ──
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    if (isRunning && noiseEnabled) {
+      const audio = new Audio(noiseSource)
+      audio.loop = true
+      audio.volume = noiseVolume / 100
+      audio.play().catch((err) => { console.warn('Audio autoplay blocked:', err) })
+      audioRef.current = audio
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [isRunning, noiseEnabled, noiseSource])
+
+  // ── Volume real-time sync ──
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = noiseVolume / 100
+    }
+  }, [noiseVolume])
+
+  // ── Handlers ──
+  const handleStart = () => {
+    if (secondsLeft > 0) {
+      if (!isRunning) {
+        setTotalSeconds(secondsLeft)
+      }
+      setIsRunning(true)
+    }
+  }
+
+  const handlePause = () => {
+    setIsRunning(false)
+  }
+
+  const handleReset = () => {
+    setIsRunning(false)
+    setSecondsLeft(minutes * 60)
+    setTotalSeconds(minutes * 60)
+  }
+
   const timerState = {
     minutes,
     bgMode, chromakeyColor, customBgColor,
     showDigitalTimer, fontFamily, fontSize, fontColor, timeFormat,
     showVisualTimer, visualShape, visualColor, visualTrackColor,
     noiseEnabled, noiseSource, noiseVolume,
+    secondsLeft, totalSeconds, isRunning,
   }
 
   const timerActions = {
@@ -57,6 +142,7 @@ export default function App() {
     setShowDigitalTimer, setFontFamily, setFontSize, setFontColor, setTimeFormat,
     setShowVisualTimer, setVisualShape, setVisualColor, setVisualTrackColor,
     setNoiseEnabled, setNoiseSource, setNoiseVolume,
+    handleStart, handlePause, handleReset,
   }
 
   return (

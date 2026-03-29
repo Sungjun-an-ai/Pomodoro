@@ -1,9 +1,9 @@
 export default function TimerCanvas({ state }) {
   const {
-    minutes,
     bgMode, chromakeyColor, customBgColor,
     showDigitalTimer, fontFamily, fontSize, fontColor, timeFormat,
     showVisualTimer, visualShape, visualColor, visualTrackColor,
+    secondsLeft, totalSeconds,
   } = state
 
   // 배경색 결정
@@ -37,13 +37,12 @@ export default function TimerCanvas({ state }) {
     }
   }
 
-  const totalSeconds = minutes * 60
-  const displayTime = formatTime(totalSeconds)
+  const displayTime = formatTime(secondsLeft)
 
   // 원형 그래프 SVG 파라미터
   const circleRadius = 90
   const circleCircumference = 2 * Math.PI * circleRadius
-  const progress = 0.75 // 미리보기용 75%
+  const progress = totalSeconds > 0 ? secondsLeft / totalSeconds : 0
 
   return (
     <div
