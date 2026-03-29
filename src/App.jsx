@@ -48,6 +48,7 @@ export default function App() {
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [totalSeconds, setTotalSeconds] = useState(minutes * 60)
+  const isRunningRef = useRef(false)
 
   // ── Canvas Ref (for video capture) ──
   const canvasRef = useRef(null)
@@ -61,6 +62,11 @@ export default function App() {
     exportMode, setExportMode,
     exportVideo, cancelExport,
   } = useVideoExport()
+
+  // ── Keep isRunningRef in sync with isRunning ──
+  useEffect(() => {
+    isRunningRef.current = isRunning
+  }, [isRunning])
 
   // ── Timer Countdown ──
   useEffect(() => {
@@ -79,7 +85,7 @@ export default function App() {
 
   // ── Sync secondsLeft/totalSeconds when minutes changes (only when not running) ──
   useEffect(() => {
-    if (!isRunning) {
+    if (!isRunningRef.current) {
       setSecondsLeft(minutes * 60)
       setTotalSeconds(minutes * 60)
     }
