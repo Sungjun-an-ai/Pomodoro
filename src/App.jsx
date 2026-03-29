@@ -65,20 +65,17 @@ export default function App() {
   // ── Timer Countdown ──
   useEffect(() => {
     if (!isRunning) return
-    if (secondsLeft <= 0) {
-      setIsRunning(false)
-      return
-    }
     const id = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
+          setIsRunning(false)
           return 0
         }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(id)
-  }, [isRunning, secondsLeft])
+  }, [isRunning])
 
   // ── Sync secondsLeft/totalSeconds when minutes changes (only when not running) ──
   useEffect(() => {
@@ -86,7 +83,7 @@ export default function App() {
       setSecondsLeft(minutes * 60)
       setTotalSeconds(minutes * 60)
     }
-  }, [minutes, isRunning])
+  }, [minutes])
 
   // ── White Noise Audio ──
   useEffect(() => {
