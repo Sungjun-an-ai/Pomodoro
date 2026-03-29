@@ -48,6 +48,9 @@ export default function App() {
   const [isRunning, setIsRunning] = useState(false)
   const [totalSeconds, setTotalSeconds] = useState(minutes * 60)
 
+  // ── Canvas Ref (for video capture) ──
+  const canvasRef = useRef(null)
+
   // ── Audio Ref ──
   const audioRef = useRef(null)
 
@@ -150,6 +153,7 @@ export default function App() {
       {/* 메인 캔버스 영역 */}
       <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <TimerCanvas
+          ref={canvasRef}
           state={timerState}
           fontOptions={FONT_OPTIONS}
         />
