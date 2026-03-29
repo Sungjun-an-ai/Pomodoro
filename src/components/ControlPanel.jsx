@@ -108,6 +108,7 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
     showDigitalTimer, fontFamily, fontSize, fontColor, timeFormat,
     showVisualTimer, visualShape, visualColor, visualTrackColor,
     noiseEnabled, noiseSource, noiseVolume,
+    isRunning, secondsLeft,
   } = state
 
   const {
@@ -116,7 +117,17 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
     setShowDigitalTimer, setFontFamily, setFontSize, setFontColor, setTimeFormat,
     setShowVisualTimer, setVisualShape, setVisualColor, setVisualTrackColor,
     setNoiseEnabled, setNoiseSource, setNoiseVolume,
+    handleStart, handlePause, handleReset,
   } = actions
+
+  // 남은 시간 텍스트용 포맷
+  const formatTime = (secs) => {
+    const h = String(Math.floor(secs / 3600)).padStart(2, '0')
+    const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0')
+    const s = String(secs % 60).padStart(2, '0')
+    return `${h}:${m}:${s}`
+  }
+  const formattedTime = formatTime(secondsLeft)
 
   return (
     <div className="p-5 space-y-6">
@@ -126,6 +137,37 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
         <p className="text-xs text-gray-500 mt-1">ADHD Focus Timer & Overlay</p>
       </div>
 
+      {/* ━━━━━━━ 0. 타이머 제어 ━━━━━━━ */}
+      <section>
+        <SectionTitle icon="▶️">타이머 제어</SectionTitle>
+        <div className="flex gap-2">
+          {!isRunning ? (
+            <button
+              onClick={handleStart}
+              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-green-600/20"
+            >
+              ▶ 시작
+            </button>
+          ) : (
+            <button
+              onClick={handlePause}
+              className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-yellow-600/20"
+            >
+              ⏸ 일시정지
+            </button>
+          )}
+          <button
+            onClick={handleReset}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-all"
+          >
+            ↺ 초기화
+          </button>
+        </div>
+        <p className="text-center text-sm text-gray-400 mt-2 font-mono">
+          남은 시간: {formattedTime}
+        </p>
+      </section>
+
       {/* ━━━━━━━ 1. 타이머 시간 ━━━━━━━ */}
       <section>
         <SectionTitle icon="⏱️">타이머 시간</SectionTitle>
@@ -134,8 +176,9 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
             type="number"
             min={1} max={180}
             value={minutes}
+            disabled={isRunning}
             onChange={(e) => setMinutes(Math.max(1, Math.min(180, Number(e.target.value))))}
-            className="w-24 bg-gray-800 border border-gray-700 text-center text-white text-lg font-mono rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-24 bg-gray-800 border border-gray-700 text-center text-white text-lg font-mono rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <span className="text-gray-400 text-sm">분</span>
           {/* 빠른 선택 */}
@@ -143,8 +186,9 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
             {[5, 15, 25, 45].map((m) => (
               <button
                 key={m}
+                disabled={isRunning}
                 onClick={() => setMinutes(m)}
-                className={`text-xs px-2 py-1 rounded-md transition-all ${
+                className={`text-xs px-2 py-1 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                   minutes === m
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-800 text-gray-500 hover:text-white'
@@ -278,7 +322,7 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
       {/* 하단 정보 */}
       <div className="pt-4 border-t border-gray-800 text-center">
         <p className="text-xs text-gray-600">
-          💡 기능 로직은 추후 구현 예정 · UI & State Preview
+          🍅 ADHD Focus Timer & YouTube Overlay
         </p>
       </div>
     </div>
