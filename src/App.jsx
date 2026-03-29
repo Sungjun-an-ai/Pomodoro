@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import TimerCanvas from './components/TimerCanvas'
+import TimerCanvas, { drawFrame } from './components/TimerCanvas'
 import ControlPanel from './components/ControlPanel'
+import useVideoExport from './hooks/useVideoExport'
 
 const FONT_OPTIONS = [
   { label: 'Roboto Mono', value: "'Roboto Mono', monospace" },
@@ -53,6 +54,13 @@ export default function App() {
 
   // ── Audio Ref ──
   const audioRef = useRef(null)
+
+  // ── Video Export ──
+  const {
+    isExporting, exportProgress,
+    exportMode, setExportMode,
+    exportVideo, cancelExport,
+  } = useVideoExport()
 
   // ── Timer Countdown ──
   useEffect(() => {
@@ -148,6 +156,15 @@ export default function App() {
     handleStart, handlePause, handleReset,
   }
 
+  const handleExportVideo = async () => {
+    if (!canvasRef.current) return
+    await exportVideo({
+      canvasRef: canvasRef.current,
+      state: timerState,
+      drawFrame,
+    })
+  }
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* 메인 캔버스 영역 */}
@@ -166,6 +183,12 @@ export default function App() {
           actions={timerActions}
           fontOptions={FONT_OPTIONS}
           noiseOptions={NOISE_OPTIONS}
+          exportMode={exportMode}
+          setExportMode={setExportMode}
+          isExporting={isExporting}
+          exportProgress={exportProgress}
+          onExportVideo={handleExportVideo}
+          onCancelExport={cancelExport}
         />
       </div>
     </div>
