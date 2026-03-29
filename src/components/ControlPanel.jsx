@@ -101,7 +101,18 @@ function RadioGroup({ options, value, onChange }) {
 }
 
 /* ── 메인 제어판 ── */
-export default function ControlPanel({ state, actions, fontOptions, noiseOptions }) {
+export default function ControlPanel({
+  state,
+  actions,
+  fontOptions,
+  noiseOptions,
+  exportMode,
+  setExportMode,
+  isExporting,
+  exportProgress,
+  onExportVideo,
+  onCancelExport,
+}) {
   const {
     minutes,
     bgMode, chromakeyColor, customBgColor,
@@ -144,21 +155,24 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
           {!isRunning ? (
             <button
               onClick={handleStart}
-              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-green-600/20"
+              disabled={isExporting}
+              className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ▶ 시작
             </button>
           ) : (
             <button
               onClick={handlePause}
-              className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-yellow-600/20"
+              disabled={isExporting}
+              className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-yellow-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ⏸ 일시정지
             </button>
           )}
           <button
             onClick={handleReset}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-all"
+            disabled={isExporting}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ↺ 초기화
           </button>
@@ -314,6 +328,70 @@ export default function ControlPanel({ state, actions, fontOptions, noiseOptions
                 min={0} max={100}
                 unit="%"
               />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ━━━━━━━ 6. 영상 추출 ━━━━━━━ */}
+      <section>
+        <SectionTitle icon="🎬">영상 추출</SectionTitle>
+        <div className="space-y-4">
+          {/* 배속 선택 */}
+          <div>
+            <span className="text-sm text-gray-400 block mb-2">추출 방식</span>
+            <RadioGroup
+              options={[
+                { label: '⚡ 빠른 추출', value: 'fast' },
+                { label: '🕐 실시간 (1배속)', value: 'realtime' },
+              ]}
+              value={exportMode}
+              onChange={setExportMode}
+            />
+            <p className="text-xs text-gray-600 mt-1">
+              {exportMode === 'fast'
+                ? '타임랩스 방식으로 빠르게 영상을 생성합니다'
+                : '실제 시간만큼 녹화합니다 (25분 = 25분 소요)'}
+            </p>
+          </div>
+
+          {/* 포맷 정보 */}
+          <div className="bg-gray-800/50 rounded-lg p-3 text-xs text-gray-400">
+            <p>📁 포맷: {bgMode === 'transparent' ? 'WebM (VP9, 투명 배경)' : 'WebM (VP8)'}</p>
+            <p>📐 해상도: 640 × 360 (16:9)</p>
+            <p>⏱️ 길이: {minutes}분 ({minutes * 60}초)</p>
+            <p className="mt-1 text-gray-500">⚠️ Chrome / Edge / Firefox 권장 (Safari 미지원)</p>
+          </div>
+
+          {/* 추출 버튼 또는 진행 상태 */}
+          {!isExporting ? (
+            <button
+              onClick={onExportVideo}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2"
+            >
+              <span>🎬</span>
+              타이머 영상 추출 (다운로드)
+            </button>
+          ) : (
+            <div className="space-y-2">
+              {/* 진행률 바 */}
+              <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-300"
+                  style={{ width: `${exportProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-purple-400 font-mono">
+                  {exportProgress}% 추출 중...
+                </p>
+                <button
+                  onClick={onCancelExport}
+                  className="text-xs text-red-400 hover:text-red-300 transition"
+                >
+                  ✕ 취소
+                </button>
+              </div>
             </div>
           )}
         </div>
